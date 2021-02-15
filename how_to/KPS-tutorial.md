@@ -10,6 +10,182 @@ The remainder of this blog will serve as a tutorial showing you how to start wit
 
 ---
 
+## Direct KPS Login via "My Nutanix"
+
+If you already a "My Nutanix" login for use with [https://my.nutanix.com](https://my.nutanix.com), Karbon Platform Services can be accessed via your My Nutanix portal.
+
+- Login to [My Nutanix](https://my.nutanix.com) using your existing credentials
+- Scroll down to the **Cloud Services** section and observe the link to **Karbon Platform Services**:
+
+  ![Karbon Platform Services link within the My Nutanix portal](./img/my_nutanix_cloud_services.png)
+
+- Use the **Launch** button to open Karbon Platform Services.  Note that the login process uses Single-Sign-On (SSO) and should not require to re-enter your credentials, provided your existing My Nutanix session has not timed out.
+
+Once you have logged into Karbon Platform Services via My Nutanix, please move on to the next section titled **Service Domains**.
+
+## KPS Login via nutanix.com
+
+The Karbon Platform Services console can also be accessed via the main [Nutanix website](https://www.nutanix.com).  If you would prefer to use this as your main KPS login method, continue below.
+
+- Browse to the [Karbon Platform Services]([Karbon Platform Services](https://www.nutanix.com/products/karbon/platform-services) product page on the [Nutanix website](https://www.nutanix.com)
+- Observe that logins through the KPS product page are available using the **My Nutanix** portal or by using a Local User Account
+
+  ![Karbon Platform Services login via Nutanix.com](./img/kps_login_nutanix_com.png)
+
+- Navigate to the **My Nutanix** login page by using the **Log in with My Nutanix** button provided
+- In the exact same way outlined in the previous section, Single-Sign-On (SSO) is used to pass authentication through the Karbon Platform Services console
+
+## Preparing for Service Domain VM Deployment
+
+Because of the tight integration between Karbon Platform Services, Nutanix Acropolis and the Nutanix Prism Central Management UI, preparing to deploy the first service domain is a simple process.  The Image Services feature of Nutanix Acropolis provides a number of key capabilities:
+
+- Centralised storage and management of disk images that can act as "base" VM disks
+- Centralised import of images that were deployed to remote clusters
+- Movement of images between VMs via the simplified attach and detach methods provided by Nutanix Prism (i.e. a disk used by one VM could easily be detached and re-attached to another VM)
+
+With these base features in mind, it is easy to see how the Service Domain VM, covered shortly, can be deployed from an image hosted by Prism Central.
+
+**Note**: This tutorial will assume you are deploying a KPS Service Domain as virtual machine on AHV.  This requires the use of the **Service Domain VM QCOW2 File for AHV** qcow2 image available on the Nutanix Support Portal.  Continue as follows.
+
+- Login to the [My Nutanix](https://my.nutanix.com) portal
+- Once logged in, click the "hamburger" icon at the top-left of the screen and select **Downloads**
+
+  ![Hamburger icon within the My Nutanix Portal](./img/hamburger_icon.png)
+
+- From the **Downloads** section, scroll to the **Apps & DevOps** section and select **Karbon Platform Services**
+
+  ![Apps & DevOps section with My Nutanix Downloads](./img/downloads_apps_and_devops.png)
+
+- Our Service Domain is going to be deployed as a VM running on AHV, necessitating the download of the image named **Service Domain VM QCOW2 File for AHV**
+
+  ![Download Service Domain Sherlock Image](./img/download_sherlock_qcow2.png)
+
+  **Quiz:** Why is the name **Sherlock** referred to throughout this tutorial and throughout the Karbon Platform Services documentation?
+
+When the QCOW2 image download is complete, we now need to make sure the image is available in Prism Central.
+
+- Login to Prism Central and, from the hamburger menu on the left, expand the **Virtual Infrastructure** branch and select **Images**.
+
+  **Note:** This tutorial was created on a system running Prism Central version **pc.2021.1**.  Previous versions may show the sidebar menu slightly different, but all recent versions will have the **Images** item under the **Virtual Infrastructure** branch.
+
+  **Another note:**: You may why these instructions are being reproduced here when they're already in the official Karbon Platform Services documentation.  Firstly, for completeness i.e. "packaging" of this tutorial and secondly because the official docs upload images using Prism Element.  We are concentrating our time in Prism Central.
+
+- Using the **Add Image** button, browse to the .qcow2 file you downloaded in previous steps, then click **Next**
+
+  ![Add Images](./img/add_images.png)
+
+- At this point, you have the option of selecting which clusters will have access to the image you're about to upload.  In our demo environment, Prism Central is only managing a single Prism Element instance, meaning we can select **All Clusters**.  The placement of your images will depend on your requirements and which clusters you have access to.
+- Lastly, when you are happy with your selections, click **Save** to begin the image upload process.
+
+  ![Finishing image upload process](./img/add_images_save.png)
+
+  **Note:** This process can take some time depending your connection speed and on how busy your Prism Central instance is.  To ensure the image is usable, please use the **Tasks** item under **Activity** in the sidebar menu and make sure the image has finished processing.
+
+  ![Tasks menu](./img/open_tasks.png)
+
+  As you can see in the example below, all image processing tasks have completed.
+
+  ![Image processing complete](./img/image_processing_complete.png)
+
+- Lastly, by opening the **Images** option under **Virtual Infrastructure** again, we can see our images are available.  The screenshot below shows **sherlock-k8s-base-image_808.qcow2** (the image that was uploaded for this tutorial), plus a previous Sherlock version and a third unrelated image for our demo environment's Ubuntu Linux management VM.
+
+  ![Images uploaded and available](./img/images_uploaded.png)
+
+With our Sherlock image now uploaded, it is ready to be used in the next step - Service Domain deployment.
+
+## Deploying Service Domain VM on AHV
+
+As mentioned previous, this tutorial will make use of a Service Domain VM hosted by AHV.  The **Service Domain** is the interface between Karbon Platform Services that is hosted by Nutanix and the edge devices and services running in your environment.  By registering your Service Domain with Karbon Platform Services, the process of establishing communication between KPS and your devices is greatly simplified.
+
+From a conceptual perspective, the Service Domain VM is just that - a virtual machine.  They are deployed and managed at cluster level the exact same way as any other VM hosted by AHV - our tutorial will focus on the **Single Node Service Domain** model, meaning we only need to deploy a single VM.  Karbon Platform Services also supports the deployment of a highly-available **Multinode Service Domain**, although this type of deployment is beyond the scope of this tutorial.  However, the official [Karbon Platform Services documentation](https://portal.nutanix.com/page/documents/details?targetId=Karbon-Platform-Services-Admin-Guide:ks-service-domain-multinode-add-t.html) covers this in excellent detail.
+
+For this tutorial, please continue below.
+
+- After logging into Prism Central, open the **Virtual Infrastructure** branch in the left sidebar, then select **VMs**
+
+  **Note:** As with previous sections, this tutorial completes these steps using Prism Central, as opposed to the official documentation with uses Prism Element.  The end result is the same, however.
+
+- After selecting the **Create VM** button, complete all required fields as follows.
+
+  - Name your Service Domain VM something that will identify its function
+  - Select the appropriate time zone for your VM - the time zone for your cluster will be at the **top** of the list
+  - Configure the VM with **8x vCPUs**
+  - Configure each socket with **1 core per vCPU**
+  - Configure the VM with **16GB vRAM**
+  - Leave the VM configured with the default **Legacy BIOS** under **Boot Configuration**
+  - Add a new disk to the VM that is configured to **Clone from Image Service** and uses the image uploaded in previous steps (our tutorial uses the **sherlock-k8s-base-image_808.qcow2** image).  Ensure this is a **SCSI** disk.
+  - Add a network adapter to the VM that is connected to a network with Internet access
+  - Other settings such as **Agent VM** and **Host Affinity** do not require any specific setting for this tutorial
+  - Click **Save** to create your VM
+  - After a few moments (dependant on cluster state), your VM will be visible in the list of VMs (which should still be on your screen from previous steps)
+
+    **Note:** Did you know Nutanix Acropolis VMs can be created via API?  For a developer-focused article about this process, please see the [Nutanix API v3 – Creating a Linux VM with Cloud-Init](https://www.nutanix.dev/2020/06/16/nutanix-api-v3-creating-a-linux-vm-with-cloud-init/) article and [Create Detailed VM](https://www.nutanix.dev/code_samples/create-detailed-vm/) code sample on Nutanix.dev.
+
+  - As a final step, select your new VM in the list, click the **Actions** button and select **Power On**:
+
+    ![Power on new Single Node Service Domain VM](./img/power_on_vm.png)
+
+    Please give the new single node service domain VM a minute or so to start; startup times may vary depending on available cluster resources
+
+Now that our Single Node Service Domain VM is created and running, we can procedd with onboarding the VM.
+
+## Onboarding Existing Single Node VM
+
+This section focuses on ensuring our previously-created Single Node Service Domain VM is available for and connected to Karbon Platform Services.  Please ensure you have access to the Karbon Platform Services console.
+
+To complete this section, we first need to make sure we have noted down the Service Domain VM's serial number.  This serial number uniquely identifies the VM within both AHV and Karbon Platform Services.
+
+- Within Prism Central, select the hamburger menu in the top-left, expand the **Virtual Infrastructure** branch and select VMs
+- From the VM list, click the VM you created in previous steps
+- In the VM details screen, note the VM's IP address, making sure not to confuse the VM IP with the host IP
+
+  ![Get Single Node Service Domain IP](./img/get_service_domain_vm_ip.png)
+
+  Our single node service domain's IP is **10.42.250.120**.
+
+- In your browser, browse to port `/v1/sn` on port 8080 of your service domain's IP address, e.g. `http://10.42.250.120:8080/v1/sn`
+- Take note of the serial number shown:
+
+  ![Get Single Node Service Domain serial number](./img/get_service_domain_vm_sn.png)
+
+  **Note:** The VM's serial number is identical to the VM's ID within your Nutanix cluster, if the VM is hosted by Nutanix AHV.  Please note the VM's ID can be obtained by browsing to the VM list within **Prism Element**, as opposed to **Prism Central** used throughout this tutorial.
+
+- From either [My Nutanix](https://my.nutanix.com) or the [Karbon Platform Services product page](https://www.nutanix.com/products/karbon/platform-services), login to Karbon Platform Services.  This process was covered in detailed in previous sections.
+- After logging in to the Karbon Platform Services console, you will be prompted to add the first service domain (assuming one hasn't been added previously).  Select the **+ Add Service Domain** when ready
+- In the window provided, enter the information that is relevant to your environment:
+
+  - Service Domain name as per the naming conventions.  Names must be a maximum of 63 characters, start and end with a lower-case character, and only make use of special characters "dash" (`-`) and dot (`.`)
+  - Select the Service Domain type.  In our tutorial we using the **Single Node** service domain type.
+  - Enter the serial number, IP address, your default gateway and subnet mask (these will differ in almost every environment)
+  - When all details are entered, click the blue "check mark" next to the Subnet Mask field; this will confirm your entries:
+
+    ![Select Check Mark button to confirm Service Domain details](./img/add_service_domain_check.png)
+
+    **Note:** If changes are required after clicking the confirm button, the ellipsis dropdown menu can be clicked and the **Edit** option selected:
+
+    ![Ellipsis button to edit Service Domain details](./img/ellipsis_edit.png)
+    
+  - If required for your environment, selec the categories that will apply to this service domain.  Prism Central categories are used to apply, amongst other things, security policies to various entities.  For example, a VM may have "permission" to contact another specific VM but not another when using Nutanix Flow
+  - In our demo environment, the completed service domain details are as follows (before clicking the confirm button):
+
+    ![Add Service Domain details](./img/add_service_domain.png)
+
+  - Selec the **Next** button and, if required, enter Kubernetes variables in the form of key/value pairs.  This is not mandatory for this tutorial.
+  - In a real or production environment, AHV-exposed GPUs can be selected depending on the requirements of the service domain.  This is not mandatory for this tutorial.
+  - Leave the SSH option disabled - in some environments the SSH option may not be selectable at all
+  - Click the **Add** button
+  - While the new Service Domain is being onboarded, Karbon Platform Services will show a status of **Not Onboarded**:
+
+    ![Service Domain Not Onboarded](./img/sd_not_onboarded.png)
+
+    **Note:** The onboarding process can take some time, depending on environmental conditions.  Please wait until the Karbon Platform Console shows the Service Domain status as **Healthy**:
+
+    ![Service Domain onboarded and healthy](./img/sd_onboarded.png)
+
+## Adding Karbon Cluster to Karbon Platform Services
+
+---
+
 ## Karbon Platform Services: Log-in
 
 At the top of the [Karbon Platform Services](https://www.nutanix.com/products/karbon/platform-services) product page, there is a log-in button and a free trial sign-up via Test Drive buttons. KPS is a PaaS that can be accessed directly via https://karbon.nutanix.com/ or you can log-in to your Nutanix account at https://my.nutanix.com: under the Cloud Services section, choose Karbon Platform Services.
