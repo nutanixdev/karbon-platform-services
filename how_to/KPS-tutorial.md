@@ -16,7 +16,7 @@ At the top of the [Karbon Platform Services](https://www.nutanix.com/products/ka
 
 Because KPS can create new and manage existing K8s clusters from different providers, it is important to establish basic governance first with roles for your teams and access to your infrastructure and Kubernetes providers.
 
-Here are some KPS resources you should keep handy:
+Here are some KPS resources to peruse:
 
 - [Articles](https://www.nutanix.dev/?s=kps) and [Labs](https://www.nutanix.dev/labs/#lab_kps)@Nutanix.dev Developer Portal with application, IoT, and database examples.
   - I recommend reviewing [From there to here, from here to there, Containers are everywhere!](https://www.nutanix.dev/2020/12/16/from-there-to-here-from-here-to-there-containers-are-everywhere/) and [Introducing Karbon Platform Services](https://www.nutanix.dev/2020/09/09/introducing-karbon-platform-services/) for KPS overviews directly from the Nutanix Product and Engineering teams.
@@ -26,8 +26,8 @@ Here are some KPS resources you should keep handy:
 ## Set-up
 
 ## Service Domains
-- Terraform
+- [Terraform](https://registry.terraform.io/providers/nutanix/nutanixkps/latest), [example](https://nutanix.slack.com/archives/CASCRFGAY/p1610696020004200?thread_ts=1610659086.000600&cid=CASCRFGAY)
 - Direct provisioning of:
   - https://github.com/nutanixdev/karbon-platform-services/tree/master/how_to/service_domain_deployment/baremetal
   - https://github.com/nutanixdev/karbon-platform-services/tree/master/how_to/service_domain_deployment/aws
-  - Hands on Workshop: [KPS Service Domain deployment on AHV](https://nutanix.handsonworkshops.com/workshops/66418164-5f85-4c74-9803-72bac2d0c196/view/)
+  - Hands on Workshop: [KPS Service Domain deployment on AHV](https://nutanix.handsonworkshops.com/workshops/66418164-5f85-4c74-9803-72bac2d0c196/view/) (requires registration)
