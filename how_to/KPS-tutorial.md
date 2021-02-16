@@ -184,6 +184,117 @@ To complete this section, we first need to make sure we have noted down the Serv
 
 ## Adding Karbon Cluster to Karbon Platform Services
 
+In our current demo environment, Karbon Platform Services and Karbon are still somewhat "separated".  At this stage this is by design, since Karbon as a product simplifies the deployment and management of Kubernetes cluster infrastructure, whereas Karbon Platform Services simplifies the deployment and management of IoT applications running on Kubernetes clusters.
+
+In this section, we will connect Karbon Platform Services to Karbon itself, allowing KPS to view and manage Karbon applications.  This process is supported on Kubernetes clusters hosted by Nutanix, AWS, Azure, GCP or others (to name a few).
+
+**Note:** This section makes a small number of assumptions.  Firstly, that you have already deployed a Karbon-managed Kubernetes cluster in your environment and that your workstation/laptop/management device already has `kubectl` installed for Kubernetes Management.  This section verifies connectivity from a Linux system, although the steps are essentially identical for all operating systems with `kubectl` already installed.
+
+### Configuring Karbon Cluster Connectivity
+
+This section must be completed before continuing to import the Karbon cluster.
+
+- Login to Prism Central using your credentials
+- From the left sidebar, expand **Service** and select **Karbon**
+
+  ![Open Nutanix Karbon](./img/open_karbon.png)
+
+- From the Karbon console, observe the list of Karbon Kubernetes clusters that is available.  This list will vary in every environment.
+
+  ![List Karbon Kubernetes clusters](./img/list_karbon_clusters.png)
+
+- With the appropriate cluster selected, click the **Actions** button and select **Download Kubeconfig**.  The Kubeconfig file is a system-generated YAML specification that gives our management workstation(s) permission to remotely manage our Karbon Kubernetes cluster.
+
+  ![Download Kubeconfig](./img/download_kubeconfig.png)
+
+  **Note:** Ensure the Kubeconfig file is downloaded to the same system that has `kubectl` installed.
+
+  In the screenshot below, observe the presence of `chris01-kubectl.cfg` and `karbon-importer.tgz` (which will be downloaded in the next section).
+
+  ![Kubeconfig downloaded](./img/kubeconfig_downloaded.png)
+
+  **Note:** The downloaded Kubeconfig file contains an authentication token that is only valid for 24 hours.  If you have previously downloaded the Kubeconfig file for your cluster, it is possible to experience authentication failures when using expired tokens.
+
+- From a terminal or SSH session, instruct `kubectl` which Kubeconfig file to use:
+
+  ```
+  export KUBECONFIG=/path/to/downloaded/kubeconfig/file
+  ```
+
+  In our demo environment, the command is as follows:
+
+  ```
+  export KUBECONFIG=~/chris01-kubectl.cfg
+  ```
+
+- Verify connectivity and operation of the Karbon Kubernetes cluster by listing the available worker nodes in the cluster:
+
+  ```
+  kubectl get nodes
+  ```
+
+  ![Verifying cluster connectivity by listing nodes](./img/list_nodes.png)
+
+  As you can see, connectivity has been configured and verified with both the cluster master and single worker nodes being shown in the list.  It is worth noting that this demo environment is not suitable for production use, since both the master and worker nodes are single points of failure.
+
+### Connecting Karbon Cluster to KPS
+
+- Following the steps outlined in previous sections, login to Karbon Platform Services via [My Nutanix](https://my.nutanix.com), the [Karbon Platform Services product page](https://www.nutanix.com/products/karbon/platform-services) or by browsing to the [Karbon Platform Services Console](https://karbon.nutanix.com).
+- Once logged in, verify that the Service Domain deployed in recent steps is still showing as **Healthy**.  Expand **Infrastructure** in the left sidebar, and select **Service Domains** to do this.
+
+  ![Service Domain onboarded and healthy](./img/sd_onboarded.png)
+
+Now that we have verified the health of our Service Domain, our Karbon-managed Kubernetes cluster can be added to Karbon Platform Services as a managed entity.
+
+- From the Karbon Platform Services console, use the top-left dropdown box to select **Kubernetes Clusters**.  Observe that by default no Kubernetes clusters are available within KPS.
+- Click the **Import a Kubernetes Cluster** button and observe the dialog window that is displayed
+- From the Karbon Platform Services download page, open the **Other Versions** tab and download the latest version of **karbon-importer.tgz**.  At the time of writing this tutorial, the latest karbon-importer.tgz version is **1.0.1**.
+
+  ![Download Karbon Importer](./img/download_karbon_importer.png)
+
+- Once the **karbon-importer.tgz** download has completed, extract the archive to your local system.  The steps below show an example of how this could be done on a Linux system.
+
+  - Open a Linux terminal (Linux desktop) or SSH session to the location of **karbon-importer.tgz**
+  - Extract the archive and view the extracted contents:
+
+    ```
+    tar xzvf karbon-importer.tgz
+    ls -l ./karbon-importer/
+    ```
+
+    Ensure the archive has been extracted as per the screenshot below:
+
+    ![Extracted Karbon Importer archive](./img/extract_karbon_importer.png)
+
+- In the dialog window that provided the Karbon Importer download link, enter the name of your cluster into the **Kubernetes Cluster Name** field, observing the cluster name being automatically transferred to the full command field below:
+
+   ![Enter Kubernetes cluster name](./img/enter_cluster_name.png)
+
+- With the Karbon importer script downloaded and extracted, it can be executed.  This process will register the Karbon cluster `chris01` with our Karbon Platform Services account.
+
+  **Note:** Similar to Kubeconfig files, the generated authentication token is only valid for 30 minutes.  The generated token can be *regenerated* with the provided **Refresh Token** link.
+
+  - Use the provided **Copy** button next to the cluster import command to ensure no errors are made when executing the script.
+
+  ![Karbon Importer script copy button](./img/karbon_importer_copy_button.png)
+
+  - Using the same terminal session used to extract the archive, execute the script.  If you have used a new terminal session at a later time, it may be necessary to export a new Kubeconfig file and re-set the KUBECONFIG variable from the previous section.
+
+    ```
+    cd ./karbon-importer/
+    ./karbon-importer.sh import chris01 <your_token_will_be_here>
+    ```
+
+  - Wait for the Karbon Importer process to complete, during which you will be provided with various status updates:
+
+    ![Execute Karbon Importer](./img/execute_karbon_importer.png)
+
+- When this process has completed, the Karbon Platform Services console can be used to verify cluster import.  If the download and script dialog is still active, click **Close** to dismiss it.  The browser session can then be refreshed to verify cluster import.
+
+  ![Karbon Cluster Imported](./img/karbon_cluster_imported.png)
+
+**TODO:** Figure out why registered Karbon clusters don't work in KPS console
+
 ---
 
 ## Karbon Platform Services: Log-in
